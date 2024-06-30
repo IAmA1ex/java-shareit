@@ -2,12 +2,13 @@ package ru.practicum.shareit.user;
 
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
-
+import ru.practicum.shareit.user.model.User;
 import java.util.List;
 
 /**
  * TODO Sprint add-controllers.
  */
+
 @RestController
 @RequestMapping(path = "/users")
 public class UserController {

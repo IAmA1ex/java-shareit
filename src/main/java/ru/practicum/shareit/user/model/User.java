@@ -1,6 +1,5 @@
-package ru.practicum.shareit.user;
+package ru.practicum.shareit.user.model;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
