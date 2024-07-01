@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.exception.DuplicatedDataException;
@@ -11,15 +12,11 @@ import java.util.List;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
     private final ObjectValidator<User> userValidator;
-
-    public UserService(UserRepository userRepository, ObjectValidator<User> userValidator) {
-        this.userRepository = userRepository;
-        this.userValidator = userValidator;
-    }
 
     public User getUser(Long id) {
         log.info("Запрос на получение пользователя с id = {}.", id);
