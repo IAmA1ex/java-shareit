@@ -5,10 +5,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.exception.DuplicatedDataException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.validation.ObjectValidator;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -20,34 +22,42 @@ public class UserService {
 
     public User getUser(Long id) {
         log.info("Запрос на получение пользователя с id = {}.", id);
-        User user = userRepository.getUser(id);
+        Optional<User> opt = userRepository.findById(id);
+        User user = opt.orElse(null);
+        if (user == null) {
+            throw new NotFoundException("Пользователь с id = " + id + " не существует.");
+        }
         log.info("Получен пользователь {}.", user);
         return user;
     }
 
     public List<User> getUsers() {
         log.info("Запрос на получение всех пользователей.");
-        List<User> users = userRepository.getUsers();
+        List<User> users = userRepository.findAll();
         log.info("Получено {} пользователей.", users.size());
         return users;
     }
 
     public User addUser(User user) {
         log.info("Запрос на добавление пользователя {}.", user);
-        if (userRepository.containsEmail(user.getEmail())) {
+        if (userRepository.existsByEmail(user.getEmail())) {
             throw new DuplicatedDataException("Пользователь с электронной почтой " + user.getEmail() + " уже существует.");
         }
-        User newUser = userRepository.addUser(user);
+        User newUser = userRepository.save(user);
         log.info("Создан пользователь {}.", newUser);
         return newUser;
     }
 
     public User updateUser(Long id, User user) {
         log.info("Запрос на обновление пользователя полями {}.", user);
-        if (!userRepository.containsUser(id)) {
+        if (!userRepository.existsById(id)) {
             throw new NotFoundException("Пользователь с id = " + id + " не существует.");
         }
-        User oldUser = userRepository.getUser(id);
+        Optional<User> opt = userRepository.findById(id);
+        User oldUser = opt.orElse(null);
+        if (oldUser == null) {
+            throw new NotFoundException("Пользователь с id = " + id + " не существует.");
+        }
         User newUser = User.builder()
                 .id(id)
                 .email(user.getEmail() == null ? oldUser.getEmail() : user.getEmail())
@@ -56,17 +66,19 @@ public class UserService {
 
         userValidator.validateObject(newUser);
 
-        if (!oldUser.getEmail().equals(newUser.getEmail()) && userRepository.containsEmail(user.getEmail())) {
+        if (!oldUser.getEmail().equals(newUser.getEmail()) && userRepository.existsByEmail(user.getEmail())) {
             throw new DuplicatedDataException("Пользователь с электронной почтой " + user.getEmail() + " уже существует.");
         }
-        User updated = userRepository.updateUser(newUser);
+        User updated = userRepository.save(newUser);
         log.info("Пользователь обновлен {}.", updated);
         return updated;
     }
 
     public User deleteUser(Long id) {
         log.info("Запрос на удаление пользователя с id = {}.", id);
-        User user = userRepository.deleteUser(id);
+        Optional<User> opt = userRepository.findById(id);
+        User user = opt.orElse(null);
+        userRepository.deleteById(id);
         log.info("Удален пользователь {}.", user);
         return user;
     }
