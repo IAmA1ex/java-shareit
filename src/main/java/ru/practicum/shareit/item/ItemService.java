@@ -70,7 +70,7 @@ public class ItemService {
         if (item == null) {
             throw new NotFoundException("Вещь с id = " + itemId + " не существует.");
         }
-        if (!item.getOwner().equals(userId)) {
+        if (!item.getOwner().getId().equals(userId)) {
             throw new ForbiddenException("Пользователь с id = " + userId + " не владеет этой вещью с id = "
                     + itemId + ".");
         }

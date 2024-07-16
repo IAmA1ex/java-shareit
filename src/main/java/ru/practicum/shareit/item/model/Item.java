@@ -30,6 +30,7 @@ public class Item {
     private Boolean available;
 
     @ManyToOne
+    @JoinColumn(name = "owner")
     private User owner;
 
     private Long request;
