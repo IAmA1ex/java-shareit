@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.shareit.booking.dto.BookingForItem;
 
 /**
  * TODO Sprint add-controllers.
@@ -27,5 +28,9 @@ public class ItemDto {
 
     @NotNull(message = "Не указан статус доступа.")
     private Boolean available;
+
+    private BookingForItem lastBooking;
+
+    private BookingForItem nextBooking;
 
 }

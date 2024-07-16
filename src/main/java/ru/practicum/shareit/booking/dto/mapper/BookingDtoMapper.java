@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingDtoShort;
+import ru.practicum.shareit.booking.dto.BookingForItem;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.item.dto.mapper.MapperItemDto;
 import ru.practicum.shareit.item.model.Item;
@@ -34,6 +35,13 @@ public class BookingDtoMapper {
                 .startTime(bookingDtoShort.getStart())
                 .endTime(bookingDtoShort.getEnd())
                 .item(item)
+                .build();
+    }
+
+    public BookingForItem toBookingForItem(final Booking booking) {
+        return BookingForItem.builder()
+                .id(booking.getId())
+                .bookerId(booking.getRenter().getId())
                 .build();
     }
 }

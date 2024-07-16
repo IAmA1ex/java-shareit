@@ -110,4 +110,23 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     """)
     boolean availableAtTime(Item item, BookingStatus bookingStatus, LocalDateTime startTime, LocalDateTime endTime);
 
+    @Query("""
+        select b
+        from Booking as b
+        where b.owner.id = ?1 and b.item.id = ?2 and
+        b.endTime < current_timestamp
+        order by b.endTime desc
+        limit 1
+    """)
+    Booking getLastBooking(Long userId, Long itemId);
+
+    @Query("""
+        select b
+        from Booking as b
+        where b.owner.id = ?1 and b.item.id = ?2 and
+        current_timestamp < b.startTime
+        order by b.startTime asc
+        limit 1
+    """)
+    Booking getNextBooking(Long userId, Long itemId);
 }

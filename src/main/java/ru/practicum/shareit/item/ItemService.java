@@ -3,6 +3,9 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.dao.BookingRepository;
+import ru.practicum.shareit.booking.dto.mapper.BookingDtoMapper;
 import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dao.ItemRepository;
@@ -12,6 +15,8 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.validation.ObjectValidator;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -24,6 +29,8 @@ public class ItemService {
     private final UserRepository userRepository;
     private final ObjectValidator<ItemDto> itemValidator;
     private final MapperItemDto mapperItemDto;
+    private final BookingRepository bookingRepository;
+    private final BookingDtoMapper bookingDtoMapper;
 
     public ItemDto getItem(Long itemId) {
         log.info("Запрос на получение вещи с id = {}.", itemId);
@@ -42,8 +49,21 @@ public class ItemService {
             throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
         }
         List<Item> items = itemRepository.findItemsByOwnerId(userId);
-        log.info("Получено {} вещей.", items.size());
-        return items.stream().map(mapperItemDto::toItemDto).toList();
+        List<ItemDto> itemDtos = items.stream().map(mapperItemDto::toItemDto).toList();
+        for (ItemDto itemDto : itemDtos) {
+            itemDto.setLastBooking(
+                    bookingDtoMapper.toBookingForItem(
+                            bookingRepository.getLastBooking(userId, itemDto.getId())
+                    )
+            );
+            itemDto.setNextBooking(
+                    bookingDtoMapper.toBookingForItem(
+                            bookingRepository.getNextBooking(userId, itemDto.getId())
+                    )
+            );
+        }
+        log.info("Получено {} вещей.", itemDtos.size());
+        return itemDtos;
     }
 
     public ItemDto createItem(Long userId, ItemDto itemDto) {
