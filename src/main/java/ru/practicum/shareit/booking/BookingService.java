@@ -13,6 +13,7 @@ import ru.practicum.shareit.booking.model.BookingState;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dao.ItemRepository;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.dao.UserRepository;
@@ -35,6 +36,10 @@ public class BookingService {
     public BookingDto createBooking(BookingDtoShort bookingDtoShort, Long userRenterId) {
         log.info("Запрос на аренду вещи с id = {}.", bookingDtoShort.getItemId());
 
+        if (!bookingTimeIsCorrect(bookingDtoShort)) {
+            throw new ValidationException("Время неверно относительно друг друга.");
+        }
+
         // Получение вещи
         Optional<Item> optItem = itemRepository.findById(bookingDtoShort.getItemId());
         if (optItem.isEmpty()) {
@@ -44,10 +49,19 @@ public class BookingService {
 
         // Проверка доступа для аренды
         if (!item.getAvailable()) {
-            throw new BadRequestException("Вещь с id = " + bookingDtoShort.getItemId() + " не доступна для аренды в это время.");
+            throw new BadRequestException("Вещь с id = " + bookingDtoShort.getItemId() + " не доступна для аренды.");
         }
 
-        // TODO Проверка доступа для аренды на определенное время
+        // Проверка на аренду вещи владельцем
+        if (item.getOwner().getId().equals(userRenterId)) {
+            throw new NotFoundException("Владелец не может арендовать свою вещь.");
+        }
+
+        // Проверка доступа для аренды на определенное время
+        if (!bookingRepository.availableAtTime(item, BookingStatus.WAITING,
+                bookingDtoShort.getStart(), bookingDtoShort.getEnd())) {
+            throw new BadRequestException("Вещь с id = " + bookingDtoShort.getItemId() + " не доступна для аренды в это время.");
+        }
 
         // Получение арендатора
         Optional<User> optRenter = userRepository.findById(userRenterId);
@@ -86,14 +100,19 @@ public class BookingService {
         }
         Booking booking = optBooking.get();
 
+        // Проверка статуса аренды
+        if (booking.getStatus() != BookingStatus.WAITING) {
+            throw new BadRequestException("Запрос на аренду с id = " + bookingId + " уже обработан.");
+        }
+
         // Проверка существования пользователя
-        if (userRepository.existsById(userId)) {
+        if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
         }
 
         // Проверка доступа пользователя
         if (!booking.getOwner().getId().equals(userId)) {
-            throw new BadRequestException("Пользователь с id = " + userId + " не имеет доступа.");
+            throw new NotFoundException("Пользователь с id = " + userId + " не имеет доступа.");
         }
 
         // Получение арендуемой вещи
@@ -107,10 +126,8 @@ public class BookingService {
         // Подтверждение или отмена
         if (approved) {
             booking.setStatus(BookingStatus.APPROVED);
-            bookingItem.setAvailable(false);
         } else {
             booking.setStatus(BookingStatus.REJECTED);
-            bookingItem.setAvailable(true);
         }
 
         // Сохранение
@@ -130,14 +147,14 @@ public class BookingService {
         log.info("Запрос на получение аренды с id = {}.", bookingId);
 
         // Проверка существования пользователя
-        if (userRepository.existsById(userId)) {
+        if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
         }
 
         // Получение аренды
         Optional<Booking> optBooking = bookingRepository.findById(bookingId);
         if (optBooking.isEmpty()) {
-            throw new BadRequestException("Запроса на аренду с id = " + bookingId + " не существует.");
+            throw new NotFoundException("Запроса на аренду с id = " + bookingId + " не существует.");
         }
         Booking booking = optBooking.get();
 
@@ -147,7 +164,7 @@ public class BookingService {
             log.info("Запрос на получение аренды c id = {} одобрен.", booking.getId());
             return bookingDto;
         } else {
-            throw new BadRequestException("Пользователь с id = " + userId + " не имеет доступа.");
+            throw new NotFoundException("Пользователь с id = " + userId + " не имеет доступа.");
         }
     }
 
@@ -156,15 +173,16 @@ public class BookingService {
                 userId, state);
 
         // Проверка существования пользователя
-        if (userRepository.existsById(userId)) {
+        Optional<User> optUser = userRepository.findById(userId);
+        if (optUser.isEmpty()) {
             throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
         }
 
         // Поиск по фильтру
-        List<Booking> bookings = List.of();
+        List<Booking> bookings;
         switch (state) {
             case ALL:
-                bookings = bookingRepository.findAllByRenterId(userId);
+                bookings = bookingRepository.findAllByRenterIdOrderByIdDesc(userId);
                 break;
             case CURRENT:
                 bookings = bookingRepository.getBookingsCurrentForRenter(userId, BookingStatus.APPROVED);
@@ -173,7 +191,8 @@ public class BookingService {
                 bookings = bookingRepository.getBookingsPastForRenter(userId, BookingStatus.APPROVED);
                 break;
             case FUTURE:
-                bookings = bookingRepository.getBookingsFutureForRenter(userId, BookingStatus.APPROVED);
+                bookings = bookingRepository.getBookingsFutureForRenter(userId,
+                        BookingStatus.WAITING, BookingStatus.APPROVED);
                 break;
             case WAITING:
                 bookings = bookingRepository.getBookingsWaitingForRenter(userId, BookingStatus.WAITING);
@@ -182,7 +201,7 @@ public class BookingService {
                 bookings = bookingRepository.getBookingsRejectedForRenter(userId, BookingStatus.REJECTED);
                 break;
             default:
-                break;
+                throw new BadRequestException("Неправильный статус.");
         }
 
         // Создание ответа
@@ -198,15 +217,16 @@ public class BookingService {
                 userId, state);
 
         // Проверка существования пользователя
-        if (userRepository.existsById(userId)) {
+        Optional<User> optUser = userRepository.findById(userId);
+        if (optUser.isEmpty()) {
             throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
         }
 
         // Поиск по фильтру
-        List<Booking> bookings = List.of();
+        List<Booking> bookings;
         switch (state) {
             case ALL:
-                bookings = bookingRepository.findAllByOwnerId(userId);
+                bookings = bookingRepository.findAllByOwnerIdOrderByIdDesc(userId);
                 break;
             case CURRENT:
                 bookings = bookingRepository.getBookingsCurrentForOwner(userId, BookingStatus.APPROVED);
@@ -215,7 +235,8 @@ public class BookingService {
                 bookings = bookingRepository.getBookingsPastForOwner(userId, BookingStatus.APPROVED);
                 break;
             case FUTURE:
-                bookings = bookingRepository.getBookingsFutureForOwner(userId, BookingStatus.APPROVED);
+                bookings = bookingRepository.getBookingsFutureForOwner(userId,
+                        BookingStatus.WAITING, BookingStatus.APPROVED);
                 break;
             case WAITING:
                 bookings = bookingRepository.getBookingsWaitingForOwner(userId, BookingStatus.WAITING);
@@ -224,7 +245,7 @@ public class BookingService {
                 bookings = bookingRepository.getBookingsRejectedForOwner(userId, BookingStatus.REJECTED);
                 break;
             default:
-                break;
+                throw new BadRequestException("Неправильный статус.");
         }
 
         // Создание ответа
@@ -233,5 +254,11 @@ public class BookingService {
                 userId,
                 bookingDto.size());
         return bookingDto;
+    }
+
+    public boolean bookingTimeIsCorrect(BookingDtoShort bookingDtoShort) {
+        // Проводится валидация времени только относительно друг друга
+        return bookingDtoShort.getStart() != null && bookingDtoShort.getEnd() != null &&
+                bookingDtoShort.getStart().isBefore(bookingDtoShort.getEnd());
     }
 }

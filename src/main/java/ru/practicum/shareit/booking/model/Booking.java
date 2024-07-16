@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.shareit.booking.model.converter.BookingStatusConverter;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.model.User;
 
@@ -40,8 +41,8 @@ public class Booking {
     @JoinColumn(name = "rented_item")
     private Item item;
 
-    @ManyToOne
-    @Enumerated(EnumType.ORDINAL)
+    @Convert(converter = BookingStatusConverter.class)
+    @JoinColumn(name = "status")
     private BookingStatus status;
 
 }
