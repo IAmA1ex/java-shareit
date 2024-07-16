@@ -3,7 +3,6 @@ package ru.practicum.shareit.item;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dao.BookingRepository;
 import ru.practicum.shareit.booking.dto.mapper.BookingDtoMapper;
 import ru.practicum.shareit.exception.ForbiddenException;
@@ -16,7 +15,6 @@ import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.validation.ObjectValidator;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 

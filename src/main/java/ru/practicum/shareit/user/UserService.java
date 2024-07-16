@@ -3,7 +3,6 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.DuplicatedDataException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dao.UserRepository;
@@ -20,7 +19,6 @@ public class UserService {
     private final UserRepository userRepository;
     private final ObjectValidator<User> userValidator;
 
-    @Transactional
     public User getUser(Long id) {
         log.info("Запрос на получение пользователя с id = {}.", id);
         Optional<User> optUser = userRepository.findById(id);
@@ -39,7 +37,6 @@ public class UserService {
         return users;
     }
 
-    @Transactional
     public User addUser(User user) {
         log.info("Запрос на добавление пользователя {}.", user);
         if (userRepository.existsByEmail(user.getEmail())) {

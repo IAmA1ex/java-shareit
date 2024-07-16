@@ -3,7 +3,6 @@ package ru.practicum.shareit.booking;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.booking.dao.BookingRepository;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingDtoShort;
@@ -32,7 +31,6 @@ public class BookingService {
     private final UserRepository userRepository;
     private final BookingDtoMapper bookingDtoMapper;
 
-    @Transactional
     public BookingDto createBooking(BookingDtoShort bookingDtoShort, Long userRenterId) {
         log.info("Запрос на аренду вещи с id = {}.", bookingDtoShort.getItemId());
 
