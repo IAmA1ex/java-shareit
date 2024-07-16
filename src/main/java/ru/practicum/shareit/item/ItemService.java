@@ -10,6 +10,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.mapper.MapperItemDto;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.dao.UserRepository;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.validation.ObjectValidator;
 import java.util.List;
 import java.util.Optional;
@@ -40,18 +41,20 @@ public class ItemService {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
         }
-        List<Item> items = itemRepository.findItemsByOwner(userId);
+        List<Item> items = itemRepository.findItemsByOwnerId(userId);
         log.info("Получено {} вещей.", items.size());
         return items.stream().map(mapperItemDto::toItemDto).toList();
     }
 
     public ItemDto createItem(Long userId, ItemDto itemDto) {
         log.info("Запрос на создание вещи {} с owner = {}.", itemDto, userId);
-        if (!userRepository.existsById(userId)) {
+        Optional<User> optRenter = userRepository.findById(userId);
+        if (optRenter.isEmpty()) {
             throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
         }
+        User user = optRenter.get();
         Item item = mapperItemDto.fromItemDto(itemDto);
-        item.setOwner(userId);
+        item.setOwner(user);
         Item created = itemRepository.save(item);
         log.info("Создана вещь {}.", created);
         return mapperItemDto.toItemDto(created);

@@ -1,10 +1,12 @@
 package ru.practicum.shareit.item.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import ru.practicum.shareit.user.model.User;
 
 /**
  * TODO Sprint add-controllers.
@@ -28,7 +30,8 @@ public class Item {
 
     private Boolean available;
 
-    private Long owner;
+    @ManyToOne
+    private User owner;
 
     private Long request;
 

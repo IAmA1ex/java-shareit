@@ -38,6 +38,14 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleValidation(final BadRequestException e) {
+        ErrorResponse errorResponse = new ErrorResponse("Ошибка запроса.", e.getMessage());
+        logError(HttpStatus.BAD_REQUEST.value(), errorResponse);
+        return errorResponse;
+    }
+
+    @ExceptionHandler
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ErrorResponse handleForbidden(final ForbiddenException e) {
         ErrorResponse errorResponse = new ErrorResponse("Запрещено.", e.getMessage());
