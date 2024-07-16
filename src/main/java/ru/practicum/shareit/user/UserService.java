@@ -3,9 +3,9 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.DuplicatedDataException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.validation.ObjectValidator;
@@ -20,13 +20,14 @@ public class UserService {
     private final UserRepository userRepository;
     private final ObjectValidator<User> userValidator;
 
+    @Transactional
     public User getUser(Long id) {
         log.info("Запрос на получение пользователя с id = {}.", id);
-        Optional<User> opt = userRepository.findById(id);
-        User user = opt.orElse(null);
-        if (user == null) {
+        Optional<User> optUser = userRepository.findById(id);
+        if (optUser.isEmpty()) {
             throw new NotFoundException("Пользователь с id = " + id + " не существует.");
         }
+        User user = optUser.get();
         log.info("Получен пользователь {}.", user);
         return user;
     }
@@ -38,6 +39,7 @@ public class UserService {
         return users;
     }
 
+    @Transactional
     public User addUser(User user) {
         log.info("Запрос на добавление пользователя {}.", user);
         if (userRepository.existsByEmail(user.getEmail())) {
@@ -50,14 +52,11 @@ public class UserService {
 
     public User updateUser(Long id, User user) {
         log.info("Запрос на обновление пользователя полями {}.", user);
-        if (!userRepository.existsById(id)) {
+        Optional<User> optOldUser = userRepository.findById(id);
+        if (optOldUser.isEmpty()) {
             throw new NotFoundException("Пользователь с id = " + id + " не существует.");
         }
-        Optional<User> opt = userRepository.findById(id);
-        User oldUser = opt.orElse(null);
-        if (oldUser == null) {
-            throw new NotFoundException("Пользователь с id = " + id + " не существует.");
-        }
+        User oldUser = optOldUser.get();
         User newUser = User.builder()
                 .id(id)
                 .email(user.getEmail() == null ? oldUser.getEmail() : user.getEmail())
@@ -76,8 +75,11 @@ public class UserService {
 
     public User deleteUser(Long id) {
         log.info("Запрос на удаление пользователя с id = {}.", id);
-        Optional<User> opt = userRepository.findById(id);
-        User user = opt.orElse(null);
+        Optional<User> optUser = userRepository.findById(id);
+        if (optUser.isEmpty()) {
+            throw new NotFoundException("Пользователь с id = " + id + " не существует.");
+        }
+        User user = optUser.get();
         userRepository.deleteById(id);
         log.info("Удален пользователь {}.", user);
         return user;
