@@ -4,7 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dao.BookingRepository;
+import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.mapper.BookingDtoMapper;
+import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dao.ItemRepository;
@@ -30,15 +32,19 @@ public class ItemService {
     private final BookingRepository bookingRepository;
     private final BookingDtoMapper bookingDtoMapper;
 
-    public ItemDto getItem(Long itemId) {
-        log.info("Запрос на получение вещи с id = {}.", itemId);
+    public ItemDto getItem(Long itemId, Long userId) {
+        log.info("Запрос (userId = {}) на получение вещи с id = {}.", userId, itemId);
         Optional<Item> opt = itemRepository.findById(itemId);
         Item item = opt.orElse(null);
         if (item == null) {
             throw new NotFoundException("Вещь с id = " + itemId + " не существует.");
         }
+        ItemDto itemDto = mapperItemDto.toItemDto(item);
+        if (item.getOwner().getId().equals(userId)) {
+            fillItemsDtoByBookingsDto(itemDto, userId);
+        }
         log.info("Получена вещь {}.", item);
-        return mapperItemDto.toItemDto(item);
+        return itemDto;
     }
 
     public List<ItemDto> getItemsOwned(Long userId) {
@@ -48,18 +54,7 @@ public class ItemService {
         }
         List<Item> items = itemRepository.findItemsByOwnerId(userId);
         List<ItemDto> itemDtos = items.stream().map(mapperItemDto::toItemDto).toList();
-        for (ItemDto itemDto : itemDtos) {
-            itemDto.setLastBooking(
-                    bookingDtoMapper.toBookingForItem(
-                            bookingRepository.getLastBooking(userId, itemDto.getId())
-                    )
-            );
-            itemDto.setNextBooking(
-                    bookingDtoMapper.toBookingForItem(
-                            bookingRepository.getNextBooking(userId, itemDto.getId())
-                    )
-            );
-        }
+        for (ItemDto itemDto : itemDtos) fillItemsDtoByBookingsDto(itemDto, userId);
         log.info("Получено {} вещей.", itemDtos.size());
         return itemDtos;
     }
@@ -113,5 +108,13 @@ public class ItemService {
         List<Item> items = itemRepository.findItemsBySubstring(text.toLowerCase());
         log.info("Найдено {} вещей.", items.size());
         return items.stream().map(mapperItemDto::toItemDto).toList();
+    }
+
+    private ItemDto fillItemsDtoByBookingsDto(ItemDto itemDto, Long userId) {
+        Booking last = bookingRepository.getLastBooking(userId, itemDto.getId());
+        if (last != null) itemDto.setLastBooking(bookingDtoMapper.toBookingForItem(last));
+        Booking next = bookingRepository.getNextBooking(userId, itemDto.getId());
+        if (last != null) itemDto.setNextBooking(bookingDtoMapper.toBookingForItem(next));
+        return itemDto;
     }
 }
