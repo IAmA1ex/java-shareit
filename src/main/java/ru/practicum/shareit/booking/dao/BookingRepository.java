@@ -5,7 +5,6 @@ import org.springframework.data.jpa.repository.Query;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -19,11 +18,10 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("""
         select b
         from Booking as b
-        where b.renter.id = ?1 and b.status = ?2 and
-            current_timestamp between b.startTime and b.endTime
-        order by b.id desc
+        where b.renter.id = ?1 and current_timestamp between b.startTime and b.endTime
+        order by b.id asc
     """)
-    List<Booking> getBookingsCurrentForRenter(Long userId, BookingStatus status);
+    List<Booking> getBookingsCurrentForRenter(Long userId);
 
     @Query("""
         select b
@@ -62,17 +60,15 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("""
         select b
         from Booking as b
-        where b.owner.id = ?1 and b.status = ?2 and
-            current_timestamp between b.startTime and b.endTime
-        order by b.id desc
+        where b.owner.id = ?1 and current_timestamp between b.startTime and b.endTime
+        order by b.id asc
     """)
-    List<Booking> getBookingsCurrentForOwner(Long userId, BookingStatus status);
+    List<Booking> getBookingsCurrentForOwner(Long userId);
 
     @Query("""
         select b
         from Booking as b
-        where b.owner.id = ?1 and b.status = ?2 and
-            current_timestamp > b.endTime
+        where b.owner.id = ?1 and b.status = ?2 and current_timestamp > b.endTime
         order by b.id desc
     """)
     List<Booking> getBookingsPastForOwner(Long userId, BookingStatus status);
@@ -80,8 +76,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("""
         select b
         from Booking as b
-        where b.owner.id = ?1 and (b.status = ?2 or b.status = ?3) and
-            current_timestamp < b.startTime
+        where b.owner.id = ?1 and (b.status = ?2 or b.status = ?3) and current_timestamp < b.startTime
         order by b.id desc
     """)
     List<Booking> getBookingsFutureForOwner(Long userId, BookingStatus status1, BookingStatus status2);

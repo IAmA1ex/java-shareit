@@ -183,7 +183,7 @@ public class BookingService {
                 bookings = bookingRepository.findAllByRenterIdOrderByIdDesc(userId);
                 break;
             case CURRENT:
-                bookings = bookingRepository.getBookingsCurrentForRenter(userId, BookingStatus.APPROVED);
+                bookings = bookingRepository.getBookingsCurrentForRenter(userId);
                 break;
             case PAST:
                 bookings = bookingRepository.getBookingsPastForRenter(userId, BookingStatus.APPROVED);
@@ -227,7 +227,7 @@ public class BookingService {
                 bookings = bookingRepository.findAllByOwnerIdOrderByIdDesc(userId);
                 break;
             case CURRENT:
-                bookings = bookingRepository.getBookingsCurrentForOwner(userId, BookingStatus.APPROVED);
+                bookings = bookingRepository.getBookingsCurrentForOwner(userId);
                 break;
             case PAST:
                 bookings = bookingRepository.getBookingsPastForOwner(userId, BookingStatus.APPROVED);

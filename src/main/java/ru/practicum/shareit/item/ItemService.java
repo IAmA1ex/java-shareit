@@ -22,7 +22,6 @@ import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.validation.ObjectValidator;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
