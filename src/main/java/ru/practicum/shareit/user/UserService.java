@@ -2,6 +2,7 @@ package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Component;
 import ru.practicum.shareit.exception.DuplicatedDataException;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -39,10 +40,17 @@ public class UserService {
 
     public User addUser(User user) {
         log.info("Запрос на добавление пользователя {}.", user);
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new DuplicatedDataException("Пользователь с электронной почтой " + user.getEmail() + " уже существует.");
+        User newUser;
+        try {
+            newUser = userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            if (e.getCause().getMessage().contains("Нарушение уникального индекса или первичного ключа")) {
+                throw new DuplicatedDataException("Пользователь с электронной почтой " + user.getEmail() + " уже существует.");
+            }
+            throw new RuntimeException("Ошибка при создании пользователя.");
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка при создании пользователя.");
         }
-        User newUser = userRepository.save(user);
         log.info("Создан пользователь {}.", newUser);
         return newUser;
     }
