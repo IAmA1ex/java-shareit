@@ -110,8 +110,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         select b
         from Booking as b
         where b.owner.id = ?1 and b.item.id = ?2 and
-        b.endTime < current_timestamp
-        order by b.endTime desc
+        b.startTime < current_timestamp
+        order by b.startTime desc
         limit 1
     """)
     Booking getLastBooking(Long userId, Long itemId);
@@ -120,11 +120,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         select b
         from Booking as b
         where b.owner.id = ?1 and b.item.id = ?2 and
-        current_timestamp < b.startTime
+        current_timestamp < b.startTime and b.status = ?3
         order by b.startTime asc
         limit 1
     """)
-    Booking getNextBooking(Long userId, Long itemId);
+    Booking getNextBooking(Long userId, Long itemId, BookingStatus status);
 
     @Query("""
         select b

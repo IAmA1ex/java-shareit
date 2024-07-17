@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.practicum.shareit.booking.dao.BookingRepository;
 import ru.practicum.shareit.booking.dto.mapper.BookingDtoMapper;
 import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.exception.BadRequestException;
 import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
@@ -157,8 +158,8 @@ public class ItemService {
     private void fillItemsDtoByBookingsDto(ItemDto itemDto, Long userId) {
         Booking last = bookingRepository.getLastBooking(userId, itemDto.getId());
         if (last != null) itemDto.setLastBooking(bookingDtoMapper.toBookingForItem(last));
-        Booking next = bookingRepository.getNextBooking(userId, itemDto.getId());
-        if (last != null) itemDto.setNextBooking(bookingDtoMapper.toBookingForItem(next));
+        Booking next = bookingRepository.getNextBooking(userId, itemDto.getId(), BookingStatus.APPROVED);
+        if (next != null) itemDto.setNextBooking(bookingDtoMapper.toBookingForItem(next));
     }
 
     private void fillItemsDtoByCommentsDto(ItemDto itemDto) {
