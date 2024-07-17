@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -129,4 +130,11 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         limit 1
     """)
     Booking getNextBooking(Long userId, Long itemId);
+
+    @Query("""
+        select b
+        from Booking as b
+        where b.renter.id = ?1 and b.item.id = ?2 and b.endTime < ?3
+    """)
+    List<Booking> isUserContainsCompletedBookingForItem(Long authorId, Long itemId, LocalDateTime created);
 }
