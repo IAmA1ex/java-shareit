@@ -27,10 +27,9 @@ public class BookingDtoMapper {
                 .build();
     }
 
-    public Booking toBooking(final BookingDtoShort bookingDtoShort, final User owner,
+    public Booking toBooking(final BookingDtoShort bookingDtoShort,
                              final User renter, final Item item) {
         return Booking.builder()
-                .owner(owner)
                 .renter(renter)
                 .startTime(bookingDtoShort.getStart())
                 .endTime(bookingDtoShort.getEnd())

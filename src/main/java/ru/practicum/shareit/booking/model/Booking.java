@@ -24,10 +24,6 @@ public class Booking {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "owner_user")
-    private User owner;
-
-    @ManyToOne
     @JoinColumn(name = "renter_user")
     private User renter;
 

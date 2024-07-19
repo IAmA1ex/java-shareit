@@ -13,6 +13,12 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     List<Booking> findAllByRenterIdOrderByIdDesc(Long userId);
 
+    @Query("""
+        select b
+        from Booking as b
+        where b.item.owner.id = ?1
+        order by b.id desc
+    """)
     List<Booking> findAllByOwnerIdOrderByIdDesc(Long userId);
 
     @Query("""
@@ -60,7 +66,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("""
         select b
         from Booking as b
-        where b.owner.id = ?1 and current_timestamp between b.startTime and b.endTime
+        where b.item.owner.id = ?1 and current_timestamp between b.startTime and b.endTime
         order by b.id asc
     """)
     List<Booking> getBookingsCurrentForOwner(Long userId);
@@ -68,7 +74,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("""
         select b
         from Booking as b
-        where b.owner.id = ?1 and b.status = ?2 and current_timestamp > b.endTime
+        where b.item.owner.id = ?1 and b.status = ?2 and current_timestamp > b.endTime
         order by b.id desc
     """)
     List<Booking> getBookingsPastForOwner(Long userId, BookingStatus status);
@@ -76,7 +82,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("""
         select b
         from Booking as b
-        where b.owner.id = ?1 and (b.status = ?2 or b.status = ?3) and current_timestamp < b.startTime
+        where b.item.owner.id = ?1 and (b.status = ?2 or b.status = ?3) and current_timestamp < b.startTime
         order by b.id desc
     """)
     List<Booking> getBookingsFutureForOwner(Long userId, BookingStatus status1, BookingStatus status2);
@@ -84,7 +90,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("""
         select b
         from Booking as b
-        where b.owner.id = ?1 and b.status = ?2
+        where b.item.owner.id = ?1 and b.status = ?2
         order by b.id desc
     """)
     List<Booking> getBookingsWaitingForOwner(Long userId, BookingStatus status);
@@ -92,7 +98,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("""
         select b
         from Booking as b
-        where b.owner.id = ?1 and b.status = ?2
+        where b.item.owner.id = ?1 and b.status = ?2
         order by b.id desc
     """)
     List<Booking> getBookingsRejectedForOwner(Long userId, BookingStatus status);
@@ -109,7 +115,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("""
         select b
         from Booking as b
-        where b.owner.id = ?1 and b.item.id = ?2 and
+        where b.item.owner.id = ?1 and b.item.id = ?2 and
         b.startTime < current_timestamp
         order by b.startTime desc
         limit 1
@@ -119,7 +125,7 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     @Query("""
         select b
         from Booking as b
-        where b.owner.id = ?1 and b.item.id = ?2 and
+        where b.item.owner.id = ?1 and b.item.id = ?2 and
         current_timestamp < b.startTime and b.status = ?3
         order by b.startTime asc
         limit 1

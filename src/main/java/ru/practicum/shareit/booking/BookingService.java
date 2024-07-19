@@ -76,7 +76,7 @@ public class BookingService {
         User owner = optOwner.get();
 
         // Формирование аренды
-        Booking booking = bookingDtoMapper.toBooking(bookingDtoShort, owner, renter, item);
+        Booking booking = bookingDtoMapper.toBooking(bookingDtoShort, renter, item);
         booking.setStatus(BookingStatus.WAITING);
 
         // Сохранение аренды
@@ -109,7 +109,7 @@ public class BookingService {
         }
 
         // Проверка доступа пользователя
-        if (!booking.getOwner().getId().equals(userId)) {
+        if (!booking.getItem().getOwner().getId().equals(userId)) {
             throw new NotFoundException("Пользователь с id = " + userId + " не имеет доступа.");
         }
 
@@ -157,7 +157,7 @@ public class BookingService {
         Booking booking = optBooking.get();
 
         // Создание ответа
-        if (booking.getOwner().getId().equals(userId) || booking.getRenter().getId().equals(userId)) {
+        if (booking.getItem().getOwner().getId().equals(userId) || booking.getRenter().getId().equals(userId)) {
             BookingDto bookingDto = bookingDtoMapper.toBookingDto(booking);
             log.info("Запрос на получение аренды c id = {} одобрен.", booking.getId());
             return bookingDto;
