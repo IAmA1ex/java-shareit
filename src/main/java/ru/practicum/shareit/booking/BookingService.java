@@ -116,7 +116,6 @@ public class BookingService {
         }
 
         // Сохранение
-        itemRepository.save(bookingItem);
         bookingRepository.save(booking);
 
         // Создание ответа
