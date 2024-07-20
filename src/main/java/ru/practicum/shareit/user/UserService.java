@@ -43,12 +43,11 @@ public class UserService {
         User newUser;
         try {
             newUser = userRepository.save(user);
-        } catch (DataIntegrityViolationException e) {
-            if (e.getCause().getMessage().contains("Нарушение уникального индекса или первичного ключа")) {
+        } catch (Exception e) {
+            if (e.getCause().getMessage().contains("[23505-") &&
+                    e.getCause().getMessage().contains("EMAIL NULLS FIRST")) {
                 throw new DuplicatedDataException("Пользователь с электронной почтой " + user.getEmail() + " уже существует.");
             }
-            throw new RuntimeException("Ошибка при создании пользователя.");
-        } catch (Exception e) {
             throw new RuntimeException("Ошибка при создании пользователя.");
         }
         log.info("Создан пользователь {}.", newUser);
