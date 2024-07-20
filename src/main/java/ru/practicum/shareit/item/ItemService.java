@@ -24,7 +24,6 @@ import ru.practicum.shareit.validation.ObjectValidator;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -42,11 +41,8 @@ public class ItemService {
 
     public ItemDto getItem(Long itemId, Long userId) {
         log.info("Запрос (userId = {}) на получение вещи с id = {}.", userId, itemId);
-        Optional<Item> opt = itemRepository.findById(itemId);
-        Item item = opt.orElse(null);
-        if (item == null) {
-            throw new NotFoundException("Вещь с id = " + itemId + " не существует.");
-        }
+        Item item = itemRepository.findById(itemId).orElseThrow(() ->
+                new NotFoundException("Вещь с id = " + itemId + " не существует."));
         ItemDto itemDto = mapperItemDto.toItemDto(item);
         if (item.getOwner().getId().equals(userId)) {
             fillItemsDtoByBookingsDto(itemDto, userId);
@@ -73,11 +69,8 @@ public class ItemService {
 
     public ItemDto createItem(Long userId, ItemDto itemDto) {
         log.info("Запрос на создание вещи {} с owner = {}.", itemDto, userId);
-        Optional<User> optRenter = userRepository.findById(userId);
-        if (optRenter.isEmpty()) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
-        }
-        User user = optRenter.get();
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                new NotFoundException("Пользователь с id = " + userId + " не существует."));
         Item item = mapperItemDto.fromItemDto(itemDto);
         item.setOwner(user);
         Item created = itemRepository.save(item);
@@ -90,11 +83,8 @@ public class ItemService {
         if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
         }
-        Optional<Item> opt = itemRepository.findById(itemId);
-        Item item = opt.orElse(null);
-        if (item == null) {
-            throw new NotFoundException("Вещь с id = " + itemId + " не существует.");
-        }
+        Item item = itemRepository.findById(itemId).orElseThrow(() ->
+                new NotFoundException("Вещь с id = " + itemId + " не существует."));
         if (!item.getOwner().getId().equals(userId)) {
             throw new ForbiddenException("Пользователь с id = " + userId + " не владеет этой вещью с id = "
                     + itemId + ".");
@@ -134,16 +124,10 @@ public class ItemService {
 
     public CommentDto addComment(Long itemId, CommentDto commentDto, Long userId) {
         LocalDateTime commentTime = LocalDateTime.now();
-        Optional<User> optRenter = userRepository.findById(userId);
-        if (optRenter.isEmpty()) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
-        }
-        User user = optRenter.get();
-        Optional<Item> optItem = itemRepository.findById(itemId);
-        if (optItem.isEmpty()) {
-            throw new NotFoundException("Вещь с id = " + itemId + " не существует.");
-        }
-        Item item = optItem.get();
+        User user = userRepository.findById(userId).orElseThrow(() ->
+                new NotFoundException("Пользователь с id = " + userId + " не существует."));
+        Item item = itemRepository.findById(itemId).orElseThrow(() ->
+                new NotFoundException("Вещь с id = " + itemId + " не существует."));
         Comment comment = Comment.builder()
                 .text(commentDto.getText())
                 .item(item)

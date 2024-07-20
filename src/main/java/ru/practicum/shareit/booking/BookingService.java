@@ -19,7 +19,6 @@ import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -39,11 +38,8 @@ public class BookingService {
         }
 
         // Получение вещи
-        Optional<Item> optItem = itemRepository.findById(bookingDtoShort.getItemId());
-        if (optItem.isEmpty()) {
-            throw new NotFoundException("Вещь с id = " + bookingDtoShort.getItemId() + " не существует.");
-        }
-        Item item = optItem.get();
+        Item item = itemRepository.findById(bookingDtoShort.getItemId()).orElseThrow(() ->
+                new NotFoundException("Вещь с id = " + bookingDtoShort.getItemId() + " не существует."));
 
         // Проверка доступа для аренды
         if (!item.getAvailable()) {
@@ -62,18 +58,12 @@ public class BookingService {
         }
 
         // Получение арендатора
-        Optional<User> optRenter = userRepository.findById(userRenterId);
-        if (optRenter.isEmpty()) {
-            throw new NotFoundException("Пользователь с id = " + userRenterId + " не существует.");
-        }
-        User renter = optRenter.get();
+        User renter = userRepository.findById(userRenterId).orElseThrow(() ->
+                new NotFoundException("Пользователь с id = " + userRenterId + " не существует."));
 
         // Получение владельца
-        Optional<User> optOwner = userRepository.findById(item.getOwner().getId());
-        if (optOwner.isEmpty()) {
-            throw new NotFoundException("Пользователь с id = " + item.getOwner().getId() + " не существует.");
-        }
-        User owner = optOwner.get();
+        User owner = userRepository.findById(item.getOwner().getId()).orElseThrow(() ->
+                new NotFoundException("Пользователь с id = " + item.getOwner().getId() + " не существует."));
 
         // Формирование аренды
         Booking booking = bookingDtoMapper.toBooking(bookingDtoShort, renter, item);
@@ -92,11 +82,8 @@ public class BookingService {
         log.info("Запрос на подтверждение аренды с id = {}.", bookingId);
 
         // Получение аренды
-        Optional<Booking> optBooking = bookingRepository.findById(bookingId);
-        if (optBooking.isEmpty()) {
-            throw new BadRequestException("Запроса на аренду с id = " + bookingId + " не существует.");
-        }
-        Booking booking = optBooking.get();
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() ->
+                new NotFoundException("Запроса на аренду с id = " + bookingId + " не существует."));
 
         // Проверка статуса аренды
         if (booking.getStatus() != BookingStatus.WAITING) {
@@ -150,11 +137,8 @@ public class BookingService {
         }
 
         // Получение аренды
-        Optional<Booking> optBooking = bookingRepository.findById(bookingId);
-        if (optBooking.isEmpty()) {
-            throw new NotFoundException("Запроса на аренду с id = " + bookingId + " не существует.");
-        }
-        Booking booking = optBooking.get();
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() ->
+                new NotFoundException("Запроса на аренду с id = " + bookingId + " не существует."));
 
         // Создание ответа
         if (booking.getItem().getOwner().getId().equals(userId) || booking.getRenter().getId().equals(userId)) {
@@ -171,8 +155,7 @@ public class BookingService {
                 userId, state);
 
         // Проверка существования пользователя
-        Optional<User> optUser = userRepository.findById(userId);
-        if (optUser.isEmpty()) {
+        if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
         }
 
@@ -215,8 +198,7 @@ public class BookingService {
                 userId, state);
 
         // Проверка существования пользователя
-        Optional<User> optUser = userRepository.findById(userId);
-        if (optUser.isEmpty()) {
+        if (!userRepository.existsById(userId)) {
             throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
         }
 
