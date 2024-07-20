@@ -235,7 +235,7 @@ public class BookingService {
         return bookingDto;
     }
 
-    public boolean bookingTimeIsCorrect(BookingDtoShort bookingDtoShort) {
+    private boolean bookingTimeIsCorrect(BookingDtoShort bookingDtoShort) {
         // Проводится валидация времени только относительно друг друга
         return bookingDtoShort.getStart() != null && bookingDtoShort.getEnd() != null &&
                 bookingDtoShort.getStart().isBefore(bookingDtoShort.getEnd());
