@@ -46,7 +46,7 @@ public class BookingController {
 
     @GetMapping("/")
     public List<BookingDto> getBookingsSlash(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                        @RequestParam(required = false, defaultValue = "ALL") BookingState state) {
+                                             @RequestParam(required = false, defaultValue = "ALL") BookingState state) {
         return bookingService.getBookings(userId, state);
     }
 

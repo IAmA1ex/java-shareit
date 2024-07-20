@@ -61,10 +61,6 @@ public class BookingService {
         User renter = userRepository.findById(userRenterId).orElseThrow(() ->
                 new NotFoundException("Пользователь с id = " + userRenterId + " не существует."));
 
-        // Получение владельца
-        User owner = userRepository.findById(item.getOwner().getId()).orElseThrow(() ->
-                new NotFoundException("Пользователь с id = " + item.getOwner().getId() + " не существует."));
-
         // Формирование аренды
         Booking booking = bookingDtoMapper.toBooking(bookingDtoShort, renter, item);
         booking.setStatus(BookingStatus.WAITING);
