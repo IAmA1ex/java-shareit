@@ -4,9 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import ru.practicum.shareit.user.model.User;
 
-/**
- * TODO Sprint add-controllers.
- */
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -14,23 +12,22 @@ import ru.practicum.shareit.user.model.User;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "items")
-public class Item {
+@Table(name = "comments")
+public class Comment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
-
-    private String description;
-
-    private Boolean available;
+    private String text;
 
     @ManyToOne
-    @JoinColumn(name = "owner")
-    private User owner;
+    @JoinColumn(name = "item_id")
+    private Item item;
 
-    private Long request;
+    @ManyToOne
+    @JoinColumn(name = "author")
+    private User author;
 
+    private LocalDateTime created;
 }
