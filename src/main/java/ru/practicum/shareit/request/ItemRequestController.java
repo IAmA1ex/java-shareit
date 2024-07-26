@@ -35,8 +35,8 @@ public class ItemRequestController {
         return itemRequestService.getAllItemRequestsFromOtherUsers(userRenterId, from, size);
     }
 
-    @GetMapping
-    public ItemRequestDto getItemRequest(@RequestParam Long requestId) {
+    @GetMapping("/{requestId}")
+    public ItemRequestDto getItemRequest(@PathVariable Long requestId) {
         return itemRequestService.getItemRequest(requestId);
     }
 
