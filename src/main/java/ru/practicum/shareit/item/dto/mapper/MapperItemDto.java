@@ -16,6 +16,7 @@ public class MapperItemDto {
                 .description(item.getDescription())
                 .available(item.getAvailable())
                 .comments(List.of())
+                .requestId(item.getRequest().getId())
                 .build();
     }
 

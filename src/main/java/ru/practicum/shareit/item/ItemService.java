@@ -18,6 +18,8 @@ import ru.practicum.shareit.item.dto.mapper.MapperCommentDto;
 import ru.practicum.shareit.item.dto.mapper.MapperItemDto;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.dao.ItemRequestRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.validation.ObjectValidator;
@@ -38,6 +40,7 @@ public class ItemService {
     private final BookingDtoMapper bookingDtoMapper;
     private final CommentRepository commentRepository;
     private final MapperCommentDto mapperCommentDto;
+    private final ItemRequestRepository itemRequestRepository;
 
     public ItemDto getItem(Long itemId, Long userId) {
         log.info("Запрос (userId = {}) на получение вещи с id = {}.", userId, itemId);
@@ -68,11 +71,22 @@ public class ItemService {
     }
 
     public ItemDto createItem(Long userId, ItemDto itemDto) {
-        log.info("Запрос на создание вещи {} с owner = {}.", itemDto, userId);
+        log.info("Запрос на создание вещи {} с ownerId = {}, requestId = {}.", itemDto, userId, itemDto.getRequestId());
         User user = userRepository.findById(userId).orElseThrow(() ->
                 new NotFoundException("Пользователь с id = " + userId + " не существует."));
         Item item = mapperItemDto.fromItemDto(itemDto);
         item.setOwner(user);
+
+        // Если вещь создается по запросу
+        if (itemDto.getRequestId() != null) {
+            ItemRequest itemRequest = itemRequestRepository.findById(itemDto.getRequestId()).orElseThrow(() ->
+                    new NotFoundException("Запрос с id = " + itemDto.getRequestId() + " не существует. Вещь не создана."));
+            if (itemRequest.getCreator().getId().equals(userId)) {
+                throw new BadRequestException("Вещь не может быть добавлена по собственному запросу.");
+            }
+            item.setRequest(itemRequest);
+        }
+
         Item created = itemRepository.save(item);
         log.info("Создана вещь {}.", created);
         return mapperItemDto.toItemDto(created);
