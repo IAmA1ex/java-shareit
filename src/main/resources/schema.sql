@@ -24,7 +24,7 @@ CREATE TABLE IF NOT EXISTS items (
     description VARCHAR(255) NOT NULL,
     available BOOLEAN NOT NULL,
     owner BIGINT NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    request BIGINT NOT NULL REFERENCES requests (id)
+    request BIGINT REFERENCES requests (id)
 );
 
 CREATE TABLE IF NOT EXISTS booking_status (

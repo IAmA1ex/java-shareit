@@ -33,6 +33,7 @@ public class Item {
     private User owner;
 
     @ManyToOne
+    @JoinColumn(name = "request")
     private ItemRequest request;
 
 }

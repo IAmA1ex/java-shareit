@@ -28,6 +28,7 @@ public class ItemRequest {
     private LocalDateTime created;
 
     @ManyToOne
+    @JoinColumn(name = "creator")
     private User creator;
 
 }
