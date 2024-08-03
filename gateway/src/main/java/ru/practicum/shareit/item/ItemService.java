@@ -2,29 +2,11 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.booking.dao.BookingRepository;
-import ru.practicum.shareit.booking.dto.mapper.BookingDtoMapper;
-import ru.practicum.shareit.booking.model.Booking;
-import ru.practicum.shareit.booking.model.BookingStatus;
-import ru.practicum.shareit.exception.BadRequestException;
-import ru.practicum.shareit.exception.ForbiddenException;
-import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.item.dao.CommentRepository;
-import ru.practicum.shareit.item.dao.ItemRepository;
+import ru.practicum.shareit.item.client.ItemClient;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.mapper.MapperCommentDto;
-import ru.practicum.shareit.item.dto.mapper.MapperItemDto;
-import ru.practicum.shareit.item.model.Comment;
-import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.request.dao.ItemRequestRepository;
-import ru.practicum.shareit.request.model.ItemRequest;
-import ru.practicum.shareit.user.dao.UserRepository;
-import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.validation.ObjectValidator;
-
-import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -32,147 +14,71 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ItemService {
 
-    private final ItemRepository itemRepository;
-    private final UserRepository userRepository;
-    private final ObjectValidator<ItemDto> itemValidator;
-    private final MapperItemDto mapperItemDto;
-    private final BookingRepository bookingRepository;
-    private final BookingDtoMapper bookingDtoMapper;
-    private final CommentRepository commentRepository;
-    private final MapperCommentDto mapperCommentDto;
-    private final ItemRequestRepository itemRequestRepository;
+    private final ItemClient itemClient;
 
     public ItemDto getItem(Long itemId, Long userId) {
-        log.info("Запрос (userId = {}) на получение вещи с id = {}.", userId, itemId);
-        Item item = itemRepository.findById(itemId).orElseThrow(() ->
-                new NotFoundException("Вещь с id = " + itemId + " не существует."));
-        ItemDto itemDto = mapperItemDto.toItemDto(item);
-        if (item.getOwner().getId().equals(userId)) {
-            fillItemsDtoByBookingsDto(itemDto, userId);
+        log.info("GATEWAY: получен запрос на получение вещи.");
+        ResponseEntity<Object> response = itemClient.getItem(userId, itemId);
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            ItemDto itemDto = (ItemDto) response.getBody();
+            log.info("GATEWAY: обработан запрос на получение вещи.");
+            return itemDto;
         }
-        fillItemsDtoByCommentsDto(itemDto);
-        log.info("Получена вещь {}.", item);
-        return itemDto;
+        return null; // !!!!!
     }
 
     public List<ItemDto> getItemsOwned(Long userId) {
-        log.info("Запрос на получение вещей с owner = {}.", userId);
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
+        log.info("GATEWAY: получен запрос на получение вещей владельца.");
+        ResponseEntity<Object> response = itemClient.getItems(userId);
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            List<ItemDto> itemDtos = (List<ItemDto>) response.getBody();
+            log.info("GATEWAY: обработан запрос на получение вещей владельца.");
+            return itemDtos;
         }
-        List<Item> items = itemRepository.findItemsByOwnerId(userId);
-        List<ItemDto> itemDtos = items.stream().map(mapperItemDto::toItemDto).toList();
-        for (ItemDto itemDto : itemDtos) {
-            fillItemsDtoByBookingsDto(itemDto, userId);
-            fillItemsDtoByCommentsDto(itemDto);
-        }
-        log.info("Получено {} вещей.", itemDtos.size());
-        return itemDtos;
+        return null; // !!!!!
     }
 
     public ItemDto createItem(Long userId, ItemDto itemDto) {
-        log.info("Запрос на создание вещи {} с ownerId = {}, requestId = {}.", itemDto, userId, itemDto.getRequestId());
-        User user = userRepository.findById(userId).orElseThrow(() ->
-                new NotFoundException("Пользователь с id = " + userId + " не существует."));
-        Item item = mapperItemDto.fromItemDto(itemDto);
-        item.setOwner(user);
-
-        // Если вещь создается по запросу
-        if (itemDto.getRequestId() != null) {
-            ItemRequest itemRequest = itemRequestRepository.findById(itemDto.getRequestId()).orElseThrow(() ->
-                    new NotFoundException("Запрос с id = " + itemDto.getRequestId() + " не существует. Вещь не создана."));
-            if (itemRequest.getCreator().getId().equals(userId)) {
-                throw new BadRequestException("Вещь не может быть добавлена по собственному запросу.");
-            }
-            item.setRequest(itemRequest);
+        log.info("GATEWAY: получен запрос на создание вещи.");
+        ResponseEntity<Object> response = itemClient.createItem(userId, itemDto);
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            ItemDto itemDtoCreated = (ItemDto) response.getBody();
+            log.info("GATEWAY: обработан запрос на создание вещи.");
+            return itemDtoCreated;
         }
-
-        Item created = itemRepository.save(item);
-        log.info("Создана вещь {}.", created);
-        return mapperItemDto.toItemDto(created);
+        return null; // !!!!!
     }
 
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
-        log.info("Запрос на обновление веши с itemId = {}, пользователем с userId = {}, полями {}.", itemId, userId, itemDto);
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
+        log.info("GATEWAY: получен запрос на обновление веши.");
+        ResponseEntity<Object> response = itemClient.updateItem(userId, itemId, itemDto);
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            ItemDto itemDtoUpdated = (ItemDto) response.getBody();
+            log.info("GATEWAY: обработан запрос на обновление вещи.");
+            return itemDtoUpdated;
         }
-        Item item = itemRepository.findById(itemId).orElseThrow(() ->
-                new NotFoundException("Вещь с id = " + itemId + " не существует."));
-        if (!item.getOwner().getId().equals(userId)) {
-            throw new ForbiddenException("Пользователь с id = " + userId + " не владеет этой вещью с id = "
-                    + itemId + ".");
-        }
-        if (itemDto.getName() != null) item.setName(itemDto.getName());
-        if (itemDto.getDescription() != null) item.setDescription(itemDto.getDescription());
-        if (itemDto.getAvailable() != null) item.setAvailable(itemDto.getAvailable());
-        itemValidator.validateObject(mapperItemDto.toItemDto(item));
-        Item updated = itemRepository.save(item);
-        ItemDto itemDtoUpdsted = mapperItemDto.toItemDto(updated);
-        if (item.getOwner().getId().equals(userId)) {
-            fillItemsDtoByBookingsDto(itemDtoUpdsted, userId);
-        }
-        fillItemsDtoByCommentsDto(itemDtoUpdsted);
-        log.info("Вещь обновлена {}.", updated);
-        return itemDtoUpdsted;
+        return null; // !!!!!
     }
 
     public List<ItemDto> searchItemsByText(Long userId, String text) {
-        log.info("Запрос на поиск вещей по тексту '{}'.", text);
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
+        log.info("GATEWAY: получен запрос на поиск вещей по тексту.");
+        ResponseEntity<Object> response = itemClient.findByText(userId, text);
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            List<ItemDto> itemDtos = (List<ItemDto>) response.getBody();
+            log.info("GATEWAY: обработан запрос на поиск вещей по тексту.");
+            return itemDtos;
         }
-        if (text.isBlank()) {
-            log.info("Найдено 0 вещей. Пустой текст.");
-            return List.of();
-        }
-        List<Item> items = itemRepository.findItemsBySubstring(text.toLowerCase());
-        List<ItemDto> itemDtos = items.stream().map(mapperItemDto::toItemDto).toList();
-        for (ItemDto itemDto : itemDtos) {
-            fillItemsDtoByBookingsDto(itemDto, userId);
-            fillItemsDtoByCommentsDto(itemDto);
-        }
-        log.info("Найдено {} вещей.", itemDtos.size());
-        return itemDtos;
+        return null; // !!!!!
     }
 
     public CommentDto addComment(Long itemId, CommentDto commentDto, Long userId) {
-        LocalDateTime commentTime = LocalDateTime.now();
-        User user = userRepository.findById(userId).orElseThrow(() ->
-                new NotFoundException("Пользователь с id = " + userId + " не существует."));
-        Item item = itemRepository.findById(itemId).orElseThrow(() ->
-                new NotFoundException("Вещь с id = " + itemId + " не существует."));
-        Comment comment = Comment.builder()
-                .text(commentDto.getText())
-                .item(item)
-                .author(user)
-                .created(commentTime)
-                .build();
-        validateCommentTimeAndBooking(comment);
-        Comment savedComment = commentRepository.save(comment);
-        return mapperCommentDto.toCommentDto(savedComment);
-    }
-
-    private void fillItemsDtoByBookingsDto(ItemDto itemDto, Long userId) {
-        Booking last = bookingRepository.getLastBooking(userId, itemDto.getId());
-        if (last != null) itemDto.setLastBooking(bookingDtoMapper.toBookingForItem(last));
-        Booking next = bookingRepository.getNextBooking(userId, itemDto.getId(), BookingStatus.APPROVED);
-        if (next != null) itemDto.setNextBooking(bookingDtoMapper.toBookingForItem(next));
-    }
-
-    private void fillItemsDtoByCommentsDto(ItemDto itemDto) {
-        List<Comment> comments = commentRepository.findAllByItemId(itemDto.getId());
-        List<CommentDto> commentDtos = comments.stream()
-                .map(mapperCommentDto::toCommentDto)
-                .toList();
-        itemDto.setComments(commentDtos);
-    }
-
-    private void validateCommentTimeAndBooking(Comment comment) {
-        List<Booking> bookings = bookingRepository.isUserContainsCompletedBookingForItem(comment.getAuthor().getId(),
-                comment.getItem().getId(), comment.getCreated());
-        if (bookings.isEmpty()) {
-            throw new BadRequestException("Нельзя создать отзыв на предмет который не был арендован.");
+        log.info("GATEWAY: получен запрос на добавление комментария к вещи.");
+        ResponseEntity<Object> response = itemClient.addComment(userId, itemId, commentDto);
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            CommentDto comment = (CommentDto) response.getBody();
+            log.info("GATEWAY: обработан запрос на добавление комментария к вещи.");
+            return comment;
         }
+        return null; // !!!!!
     }
 }
