@@ -33,5 +33,5 @@ build/
 .vscode/
 
 *.db
-db/*
+server/db/*
 
