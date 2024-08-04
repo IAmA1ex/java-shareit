@@ -1,5 +1,6 @@
 package ru.practicum.shareit.user;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -15,12 +16,13 @@ import java.util.List;
 public class UserService {
 
     private final UserClient userClient;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public UserDto getUser(Long id) {
         log.info("GATEWAY: получен запрос на получение пользователя.");
         ResponseEntity<Object> response = userClient.getUser(id);
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            UserDto userDto = (UserDto) response.getBody();
+            UserDto userDto = getBodyClass(response, UserDto.class);
             log.info("GATEWAY: обработан запрос на получение пользователя.");
             return userDto;
         }
@@ -42,7 +44,7 @@ public class UserService {
         log.info("GATEWAY: получен запрос на добавление пользователя.");
         ResponseEntity<Object> response = userClient.addUser(user);
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            UserDto userDtoCreated = (UserDto) response.getBody();
+            UserDto userDtoCreated = getBodyClass(response, UserDto.class);
             log.info("GATEWAY: обработан запрос на добавление пользователя.");
             return userDtoCreated;
         }
@@ -69,6 +71,17 @@ public class UserService {
             return userDtoDeleted;
         }
         return null; // !!!!!
+    }
+
+    private <T> T getBodyClass(ResponseEntity<Object> reo, Class<T> type) {
+        try {
+            if (reo.getBody() != null) {
+                String json = objectMapper.writeValueAsString(reo.getBody());
+                return objectMapper.readValue(json, type);
+            } else return null;
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage());
+        }
     }
 
 }
