@@ -64,6 +64,6 @@ public class BookingClient extends BaseClient {
                 "bookingId", bookingId,
                 "approved", approved
         );
-        return patch("/{bookingId}?approved={approved}", userId, parameters);
+        return patch("/{bookingId}?approved={approved}", userId, parameters, null);
     }
 }

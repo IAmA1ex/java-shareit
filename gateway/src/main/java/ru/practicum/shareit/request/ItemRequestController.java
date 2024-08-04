@@ -1,6 +1,7 @@
 package ru.practicum.shareit.request;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
@@ -29,9 +30,10 @@ public class ItemRequestController {
     }
 
     @GetMapping("/all")
-    public List<ItemRequestDto> getAllItemRequestsFromOtherUsers(@RequestHeader("X-Sharer-User-Id") Long userRenterId,
-                                                                 @RequestParam Long from,
-                                                                 @RequestParam Long size) {
+    public List<ItemRequestDto> getAllItemRequestsFromOtherUsers(
+            @RequestHeader("X-Sharer-User-Id") Long userRenterId,
+            @RequestParam @Positive(message = "Параметр from должен быть положительным.") Long from,
+            @RequestParam @Positive(message = "Параметр size должен быть положительным.") Long size) {
         return itemRequestService.getAllItemRequestsFromOtherUsers(userRenterId, from, size);
     }
 
