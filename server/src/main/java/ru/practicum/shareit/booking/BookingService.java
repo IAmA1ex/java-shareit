@@ -11,6 +11,7 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingState;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.exception.BadRequestException;
+import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dao.ItemRepository;
@@ -32,6 +33,10 @@ public class BookingService {
 
     public BookingDto createBooking(BookingDtoShort bookingDtoShort, Long userRenterId) {
         log.info("Запрос на аренду вещи с id = {}.", bookingDtoShort.getItemId());
+
+        // Получение арендатора
+        User renter = userRepository.findById(userRenterId).orElseThrow(() ->
+                new NotFoundException("Пользователь с id = " + userRenterId + " не существует."));
 
         if (!bookingTimeIsCorrect(bookingDtoShort)) {
             throw new ValidationException("Время неверно относительно друг друга.");
@@ -56,10 +61,6 @@ public class BookingService {
                 bookingDtoShort.getStart(), bookingDtoShort.getEnd())) {
             throw new BadRequestException("Вещь с id = " + bookingDtoShort.getItemId() + " не доступна для аренды в это время.");
         }
-
-        // Получение арендатора
-        User renter = userRepository.findById(userRenterId).orElseThrow(() ->
-                new NotFoundException("Пользователь с id = " + userRenterId + " не существует."));
 
         // Формирование аренды
         Booking booking = bookingDtoMapper.toBooking(bookingDtoShort, renter, item);
@@ -86,14 +87,9 @@ public class BookingService {
             throw new BadRequestException("Запрос на аренду с id = " + bookingId + " уже обработан.");
         }
 
-        // Проверка существования пользователя
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
-        }
-
         // Проверка доступа пользователя
         if (!booking.getItem().getOwner().getId().equals(userId)) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не имеет доступа.");
+            throw new ForbiddenException("Пользователь с id = " + userId + " не имеет доступа.");
         }
 
         // Получение арендуемой вещи
