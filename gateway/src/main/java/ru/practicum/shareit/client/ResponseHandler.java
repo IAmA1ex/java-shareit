@@ -8,10 +8,16 @@ import org.springframework.stereotype.Component;
 import ru.practicum.shareit.exception.CustomError;
 import ru.practicum.shareit.exception.ErrorResponse;
 
+import java.text.SimpleDateFormat;
+
 @Component
 public class ResponseHandler {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public ResponseHandler() {
+        objectMapper.findAndRegisterModules();
+    }
 
     public <T> T handleResponse(ResponseEntity<Object> reo, TypeReference<T> objectType) {
         handleError(reo);
