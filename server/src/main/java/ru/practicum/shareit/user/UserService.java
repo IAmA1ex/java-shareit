@@ -59,8 +59,10 @@ public class UserService {
                 .name(user.getName() == null ? oldUser.getName() : user.getName())
                 .build();
         userValidator.validateObject(newUser);
-        if (!oldUser.getEmail().equals(newUser.getEmail()) && userRepository.existsByEmail(user.getEmail())) {
-            throw new DuplicatedDataException("Пользователь с электронной почтой " + user.getEmail() + " уже существует.");
+        if (!oldUser.getEmail().equals(newUser.getEmail())) {
+            if (userRepository.existsByEmail(user.getEmail())) {
+                throw new DuplicatedDataException("Пользователь с электронной почтой " + user.getEmail() + " уже существует.");
+            }
         }
         User updated = userRepository.save(newUser);
         log.info("Пользователь обновлен {}.", updated);
