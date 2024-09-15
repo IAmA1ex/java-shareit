@@ -92,11 +92,6 @@ public class BookingService {
             throw new ForbiddenException("Пользователь с id = " + userId + " не имеет доступа.");
         }
 
-        // Проверка существования пользователя
-        if (!userRepository.existsById(userId)) {
-            throw new NotFoundException("Пользователь с id = " + userId + " не существует.");
-        }
-
         // Получение арендуемой вещи
         Item bookingItem = booking.getItem();
 

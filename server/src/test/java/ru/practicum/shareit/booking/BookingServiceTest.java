@@ -13,6 +13,7 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.BookingState;
 import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.exception.BadRequestException;
+import ru.practicum.shareit.exception.ForbiddenException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dao.ItemRepository;
@@ -191,14 +192,8 @@ class BookingServiceTest {
         assertEquals("Запрос на аренду с id = " + realBookingId + " уже обработан.", exceptionRejected.getMessage());
         bookingStatus = BookingStatus.WAITING;
 
-        // Проверка существования пользователя
-        NotFoundException exceptionUser = assertThrows(NotFoundException.class, () -> {
-            bookingService.approveBooking(realBookingId, fakeUserId, approved);
-        });
-        assertEquals("Пользователь с id = " + fakeUserId + " не существует.", exceptionUser.getMessage());
-
         // Проверка доступа пользователя
-        NotFoundException exceptionAccess = assertThrows(NotFoundException.class, () -> {
+        ForbiddenException exceptionAccess = assertThrows(ForbiddenException.class, () -> {
             bookingService.approveBooking(realBookingId, realUserNotOwnerId, approved);
         });
         assertEquals("Пользователь с id = " + realUserNotOwnerId + " не имеет доступа.", exceptionAccess.getMessage());
