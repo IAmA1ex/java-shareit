@@ -25,7 +25,6 @@ import ru.practicum.shareit.request.dao.ItemRequestRepository;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.validation.ObjectValidator;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -43,7 +42,6 @@ class ItemServiceTest {
     private ItemService itemService;
     private ItemRepository itemRepository;
     private UserRepository userRepository;
-    private ObjectValidator<ItemDto> itemValidator;
     private MapperItemDto mapperItemDto;
     private BookingRepository bookingRepository;
     private BookingDtoMapper bookingDtoMapper;
@@ -67,14 +65,13 @@ class ItemServiceTest {
     void setUp() {
         itemRepository = mock(ItemRepository.class);
         userRepository = mock(UserRepository.class);
-        itemValidator = new ObjectValidator<>();
         mapperItemDto = new MapperItemDto();
         bookingRepository = mock(BookingRepository.class);
         bookingDtoMapper = new BookingDtoMapper(mapperItemDto);
         commentRepository = mock(CommentRepository.class);
         mapperCommentDto = new MapperCommentDto();
         itemRequestRepository = mock(ItemRequestRepository.class);
-        itemService = new ItemService(itemRepository, userRepository, itemValidator, mapperItemDto, bookingRepository,
+        itemService = new ItemService(itemRepository, userRepository, mapperItemDto, bookingRepository,
                 bookingDtoMapper, commentRepository, mapperCommentDto, itemRequestRepository);
 
         usedIds = new ArrayList<>();
@@ -326,18 +323,17 @@ class ItemServiceTest {
         // Проверка валидации: name
         ItemDto validNameItemDto = getItemDtoForCreate(null);
         validNameItemDto.setName("");
-        ValidationException validationExceptionName = assertThrows(ValidationException.class, () -> {
-            itemService.updateItem(realUserId, realItemId, validNameItemDto);
-        });
-        assertTrue(validationExceptionName.getMessage().contains("Имя не может быть пустым."));
+        ItemDto itemDtoUpdatedValidName = itemService.updateItem(realUserId, realItemId, validNameItemDto);
+        assertEquals(itemDtoUpdatedValidName.getId(), realItemId);
+        assertNotEquals(itemDtoUpdatedValidName.getName(), validNameItemDto.getName());
 
         // Проверка валидации: description
         ItemDto validDescriptionItemDto = getItemDtoForCreate(null);
         validDescriptionItemDto.setDescription("");
-        ValidationException validationExceptionDescription = assertThrows(ValidationException.class, () -> {
-            itemService.updateItem(realUserId, realItemId, validDescriptionItemDto);
-        });
-        assertTrue(validationExceptionDescription.getMessage().contains("Описание не может быть пустым."));
+        ItemDto itemDtoUpdatedValidDescription = itemService.updateItem(realUserId, realItemId,
+                validDescriptionItemDto);
+        assertEquals(itemDtoUpdatedValidDescription.getId(), realItemId);
+        assertNotEquals(itemDtoUpdatedValidDescription.getDescription(), validNameItemDto.getDescription());
 
         // Проверка успешного обновления: name
         ItemDto itemDtoForUpdate = getItemDtoForCreate(null);

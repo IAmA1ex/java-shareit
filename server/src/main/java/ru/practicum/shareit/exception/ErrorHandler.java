@@ -58,20 +58,6 @@ public class ErrorHandler {
 
     @ExceptionHandler
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleValidation(final MethodArgumentNotValidException e) {
-        Pattern pattern = Pattern.compile("\\[([^\\[\\]]*)\\]");
-        Matcher matcher = pattern.matcher(e.getMessage());
-        String lastPart = "";
-        while (matcher.find()) {
-            lastPart = matcher.group(1);
-        }
-        ErrorResponse errorResponse = new ErrorResponse("Ошибка валидации.", lastPart);
-        logError(HttpStatus.BAD_REQUEST.value(), errorResponse);
-        return errorResponse;
-    }
-
-    @ExceptionHandler
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ErrorResponse handleForbidden(final MethodArgumentTypeMismatchException e) {
         ErrorResponse errorResponse = new ErrorResponse("Unknown state: UNSUPPORTED_STATUS",
                 "Проблемы при конвертации. " + e.getValue());

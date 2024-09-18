@@ -10,7 +10,6 @@ import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.validation.ObjectValidator;
 
 import java.util.*;
 
@@ -25,15 +24,13 @@ class UserServiceTest {
 
     private UserService userService;
     private UserRepository userRepository;
-    private ObjectValidator<User> objectValidator;
 
     private final Long maxRealId = 100L;
 
     @BeforeEach
     void setUp() {
         userRepository = mock(UserRepository.class);
-        objectValidator = new ObjectValidator<>();
-        userService = new UserService(userRepository, objectValidator);
+        userService = new UserService(userRepository);
 
         when(userRepository.findById(anyLong())).thenAnswer(arguments -> {
             Long id = arguments.getArgument(0);
@@ -115,10 +112,10 @@ class UserServiceTest {
          assertEquals("Пользователь с id = " + notExistUser.getId() + " не существует.",
                  exception1.getMessage());
 
-         ValidationException exception2 = assertThrows(ValidationException.class, () -> {
-             userService.updateUser(notValidUser.getId(), notValidUser);
-         });
-         assertTrue(exception2.getMessage().contains("Почта имеет неверный формат."));
+         User userValid = userService.updateUser(notValidUser.getId(), notValidUser);
+         assertEquals(notValidUser.getId(), userValid.getId());
+         assertEquals(userRepository.findById(maxRealId).orElseThrow().getEmail(), userValid.getEmail());
+         assertEquals(notValidUser.getName(), userValid.getName());
 
          DuplicatedDataException exception3 = assertThrows(DuplicatedDataException.class, () -> {
              userService.updateUser(existEmailUser.getId(), existEmailUser);

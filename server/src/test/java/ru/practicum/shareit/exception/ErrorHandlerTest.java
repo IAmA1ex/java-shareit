@@ -7,13 +7,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.*;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import ru.practicum.shareit.user.model.User;
 
 import java.lang.reflect.Method;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -22,9 +18,6 @@ import static org.junit.jupiter.api.Assertions.*;
 class ErrorHandlerTest {
 
     private final ErrorHandler errorHandler;
-
-    @Autowired
-    private Validator validator;
 
     @Test
     void handleNotFound() {
@@ -74,31 +67,6 @@ class ErrorHandlerTest {
         assertNotNull(errorResponse);
         assertEquals("Запрещено.", errorResponse.getError());
         assertEquals(forbiddenException.getMessage(), errorResponse.getDescription());
-    }
-
-    @Test
-    void testHandleValidationMethodArgumentNotValidException() {
-        User user = User.builder()
-                .id(null)
-                .name("")
-                .email("email@email.com")
-                .build();
-        DataBinder dataBinder = new DataBinder(user);
-        dataBinder.setValidator(validator);
-        dataBinder.validate();
-        List<ObjectError> errors = dataBinder.getBindingResult().getAllErrors();
-        if (!errors.isEmpty()) {
-            Method method = getClass().getMethods()[0];
-            MethodParameter methodParameter = new MethodParameter(method, 0);
-            MethodArgumentNotValidException exception = new MethodArgumentNotValidException(
-                    methodParameter, dataBinder.getBindingResult());
-            ErrorResponse errorResponse = errorHandler.handleValidation(exception);
-            assertNotNull(errorResponse);
-            assertEquals("Ошибка валидации.", errorResponse.getError());
-            assertEquals(errors.getFirst().getDefaultMessage(), errorResponse.getDescription());
-        } else {
-            fail();
-        }
     }
 
     @Test

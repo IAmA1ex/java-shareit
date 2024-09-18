@@ -22,7 +22,6 @@ import ru.practicum.shareit.request.dao.ItemRequestRepository;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.validation.ObjectValidator;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,7 +33,6 @@ public class ItemService {
 
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
-    private final ObjectValidator<ItemDto> itemValidator;
     private final MapperItemDto mapperItemDto;
     private final BookingRepository bookingRepository;
     private final BookingDtoMapper bookingDtoMapper;
@@ -103,10 +101,9 @@ public class ItemService {
             throw new ForbiddenException("Пользователь с id = " + userId + " не владеет этой вещью с id = "
                     + itemId + ".");
         }
-        if (itemDto.getName() != null) item.setName(itemDto.getName());
-        if (itemDto.getDescription() != null) item.setDescription(itemDto.getDescription());
+        if (!itemDto.getName().isBlank()) item.setName(itemDto.getName());
+        if (!itemDto.getDescription().isBlank()) item.setDescription(itemDto.getDescription());
         if (itemDto.getAvailable() != null) item.setAvailable(itemDto.getAvailable());
-        itemValidator.validateObject(mapperItemDto.toItemDto(item));
         Item updated = itemRepository.save(item);
         ItemDto itemDtoUpdsted = mapperItemDto.toItemDto(updated);
         if (item.getOwner().getId().equals(userId)) {

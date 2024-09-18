@@ -7,8 +7,8 @@ import ru.practicum.shareit.exception.DuplicatedDataException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.user.dao.UserRepository;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.validation.ObjectValidator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Component
@@ -16,7 +16,6 @@ import java.util.List;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final ObjectValidator<User> userValidator;
 
     public User getUser(Long id) {
         log.info("Запрос на получение пользователя с id = {}.", id);
@@ -55,10 +54,11 @@ public class UserService {
                 new NotFoundException("Пользователь с id = " + id + " не существует."));
         User newUser = User.builder()
                 .id(id)
-                .email(user.getEmail() == null ? oldUser.getEmail() : user.getEmail())
-                .name(user.getName() == null ? oldUser.getName() : user.getName())
+                .email(user.getEmail() != null && !user.getEmail().isBlank() && isEmail(user.getEmail()) ?
+                        user.getEmail() : oldUser.getEmail())
+                .name(user.getName() != null && !user.getName().isBlank() ?
+                        user.getName() : oldUser.getName())
                 .build();
-        userValidator.validateObject(newUser);
         if (!oldUser.getEmail().equals(newUser.getEmail())) {
             if (userRepository.existsByEmail(user.getEmail())) {
                 throw new DuplicatedDataException("Пользователь с электронной почтой " + user.getEmail() + " уже существует.");
@@ -67,6 +67,15 @@ public class UserService {
         User updated = userRepository.save(newUser);
         log.info("Пользователь обновлен {}.", updated);
         return updated;
+    }
+
+    private boolean isEmail(String email) {
+        String EMAIL_REGEX = "^[\\w\\.-]+@[\\w\\.-]+\\.[a-zA-Z]{2,3}$";
+        Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
+        if (email == null) {
+            return false;
+        }
+        return EMAIL_PATTERN.matcher(email).matches();
     }
 
     public User deleteUser(Long id) {
