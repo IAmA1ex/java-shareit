@@ -5,6 +5,7 @@ import lombok.*;
 import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * TODO Sprint add-item-requests.
@@ -16,7 +17,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@EqualsAndHashCode
 @Table(name = "requests")
 public class ItemRequest {
 
@@ -32,4 +32,22 @@ public class ItemRequest {
     @JoinColumn(name = "creator")
     private User creator;
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ItemRequest that = (ItemRequest) o;
+        return Objects.equals(id, that.id) && description.equals(that.description) &&
+                Objects.equals(created, that.created) && Objects.equals(creator, that.creator);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hashCode(id);
+        result = 31 * result + description.hashCode();
+        result = 31 * result + Objects.hashCode(created);
+        result = 31 * result + Objects.hashCode(creator);
+        return result;
+    }
 }
