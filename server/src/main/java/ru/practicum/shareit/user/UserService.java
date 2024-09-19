@@ -70,12 +70,12 @@ public class UserService {
     }
 
     private boolean isEmail(String email) {
-        String EMAIL_REGEX = "^[\\w\\.-]+@[\\w\\.-]+\\.[a-zA-Z]{2,3}$";
-        Pattern EMAIL_PATTERN = Pattern.compile(EMAIL_REGEX);
+        String emailRegex = "^[\\w\\.-]+@[\\w\\.-]+\\.[a-zA-Z]{2,3}$";
+        Pattern emailPattern = Pattern.compile(emailRegex);
         if (email == null) {
             return false;
         }
-        return EMAIL_PATTERN.matcher(email).matches();
+        return emailPattern.matcher(email).matches();
     }
 
     public User deleteUser(Long id) {
