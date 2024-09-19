@@ -99,31 +99,55 @@ class UserServiceTest {
 
     @Test
     void updateUser() {
-         User notExistUser = new User(maxRealId + 1, "notExistUser", "notExistUser@email.com");
-         User notValidUser = new User(maxRealId, "newNotValidUser", "newNotValidUserAemail.com");
-         User existEmailUser = new User(getRandomKey(),
-                 "newUserWithExistEmail", "existEmail@email.com");
-         User updateUser = new User(maxRealId, "updateUser", "updateUser@email.com");
+        User notExistUser = new User(maxRealId + 1, "notExistUser", "notExistUser@email.com");
+        User notValidUserName1 = new User(maxRealId, "", "newNotValidUser@email.com");
+        User notValidUserName2 = new User(maxRealId, null, "newNotValidUser@email.com");
+        User notValidUserEmail1 = new User(maxRealId, "notValidUser", "notValidUserAemail.com");
+        User notValidUserEmail2 = new User(maxRealId, "notValidUser", "");
+        User notValidUserEmail3 = new User(maxRealId, "notValidUser", null);
+        User existEmailUser = new User(getRandomKey(),
+                "newUserWithExistEmail", "existEmail@email.com");
+        User updateUser = new User(maxRealId, "updateUser", "updateUser@email.com");
 
-         NotFoundException exception1 = assertThrows(NotFoundException.class, () -> {
-             userService.updateUser(notExistUser.getId(), notExistUser);
-         });
-         assertEquals("Пользователь с id = " + notExistUser.getId() + " не существует.",
-                 exception1.getMessage());
+        NotFoundException exception1 = assertThrows(NotFoundException.class, () -> {
+            userService.updateUser(notExistUser.getId(), notExistUser);
+        });
+        assertEquals("Пользователь с id = " + notExistUser.getId() + " не существует.",
+            exception1.getMessage());
 
-         User userValid = userService.updateUser(notValidUser.getId(), notValidUser);
-         assertEquals(notValidUser.getId(), userValid.getId());
-         assertEquals(userRepository.findById(maxRealId).orElseThrow().getEmail(), userValid.getEmail());
-         assertEquals(notValidUser.getName(), userValid.getName());
+        User userValid = userService.updateUser(notValidUserName1.getId(), notValidUserName1);
+        assertEquals(notValidUserName1.getId(), userValid.getId());
+        assertEquals(notValidUserName1.getEmail(), userValid.getEmail());
+        assertNotEquals(notValidUserName1.getName(), userValid.getName());
 
-         DuplicatedDataException exception3 = assertThrows(DuplicatedDataException.class, () -> {
-             userService.updateUser(existEmailUser.getId(), existEmailUser);
-         });
-         assertEquals("Пользователь с электронной почтой " + existEmailUser.getEmail() + " уже существует.",
-                 exception3.getMessage());
+        userValid = userService.updateUser(notValidUserName2.getId(), notValidUserName2);
+        assertEquals(notValidUserName2.getId(), userValid.getId());
+        assertEquals(notValidUserName2.getEmail(), userValid.getEmail());
+        assertNotEquals(notValidUserName2.getName(), userValid.getName());
 
-         User updatedUser = userService.updateUser(updateUser.getId(), updateUser);
-         assertEquals(updateUser, updatedUser);
+        userValid = userService.updateUser(notValidUserEmail1.getId(), notValidUserEmail1);
+        assertEquals(notValidUserEmail1.getId(), userValid.getId());
+        assertEquals(notValidUserEmail1.getName(), userValid.getName());
+        assertNotEquals(notValidUserEmail1.getEmail(), userValid.getEmail());
+
+        userValid = userService.updateUser(notValidUserEmail2.getId(), notValidUserEmail2);
+        assertEquals(notValidUserEmail2.getId(), userValid.getId());
+        assertEquals(notValidUserEmail2.getName(), userValid.getName());
+        assertNotEquals(notValidUserEmail2.getEmail(), userValid.getEmail());
+
+        userValid = userService.updateUser(notValidUserEmail3.getId(), notValidUserEmail3);
+        assertEquals(notValidUserEmail3.getId(), userValid.getId());
+        assertEquals(notValidUserEmail3.getName(), userValid.getName());
+        assertNotEquals(notValidUserEmail3.getEmail(), userValid.getEmail());
+
+        DuplicatedDataException exception3 = assertThrows(DuplicatedDataException.class, () -> {
+            userService.updateUser(existEmailUser.getId(), existEmailUser);
+        });
+        assertEquals("Пользователь с электронной почтой " + existEmailUser.getEmail() + " уже существует.",
+            exception3.getMessage());
+
+        User updatedUser = userService.updateUser(updateUser.getId(), updateUser);
+        assertEquals(updateUser, updatedUser);
     }
 
     @Test

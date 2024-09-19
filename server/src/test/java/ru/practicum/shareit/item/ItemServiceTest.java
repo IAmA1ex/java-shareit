@@ -326,13 +326,34 @@ class ItemServiceTest {
         assertEquals(itemDtoUpdatedValidName.getId(), realItemId);
         assertNotEquals(itemDtoUpdatedValidName.getName(), validNameItemDto.getName());
 
+        validNameItemDto = getItemDtoForCreate(null);
+        validNameItemDto.setName(null);
+        itemDtoUpdatedValidName = itemService.updateItem(realUserId, realItemId, validNameItemDto);
+        assertEquals(itemDtoUpdatedValidName.getId(), realItemId);
+        assertNotEquals(itemDtoUpdatedValidName.getName(), validNameItemDto.getName());
+
         // Проверка валидации: description
         ItemDto validDescriptionItemDto = getItemDtoForCreate(null);
         validDescriptionItemDto.setDescription("");
         ItemDto itemDtoUpdatedValidDescription = itemService.updateItem(realUserId, realItemId,
                 validDescriptionItemDto);
         assertEquals(itemDtoUpdatedValidDescription.getId(), realItemId);
-        assertNotEquals(itemDtoUpdatedValidDescription.getDescription(), validNameItemDto.getDescription());
+        assertNotEquals(itemDtoUpdatedValidDescription.getDescription(), validDescriptionItemDto.getDescription());
+
+        validDescriptionItemDto = getItemDtoForCreate(null);
+        validDescriptionItemDto.setDescription(null);
+        itemDtoUpdatedValidDescription = itemService.updateItem(realUserId, realItemId,
+                validDescriptionItemDto);
+        assertEquals(itemDtoUpdatedValidDescription.getId(), realItemId);
+        assertNotEquals(itemDtoUpdatedValidDescription.getDescription(), validDescriptionItemDto.getDescription());
+
+        // Проверка валидации: available
+        ItemDto validAvailableItemDto = getItemDtoForCreate(null);
+        validAvailableItemDto.setAvailable(null);
+        ItemDto itemDtoUpdatedValidAvailable = itemService.updateItem(realUserId, realItemId,
+                validAvailableItemDto);
+        assertEquals(itemDtoUpdatedValidAvailable.getId(), realItemId);
+        assertNotEquals(itemDtoUpdatedValidAvailable.getAvailable(), validAvailableItemDto.getAvailable());
 
         // Проверка успешного обновления: name
         ItemDto itemDtoForUpdate = getItemDtoForCreate(null);
